@@ -14,7 +14,7 @@
 
 // CONFIG3H
 #pragma config CCP2MX = PORTC   // CCP2 MUX bit (CCP2 input/output is multiplexed with RC1)
-#pragma config PBADEN = ON      // PORTB A/D Enable bit (PORTB<4:0> pins are configured as analog input channels on Reset)
+#pragma config PBADEN = OFF      // PORTB A/D Enable bit (PORTB<4:0> pins are configured as analog input channels on Reset)
 #pragma config LPT1OSC = OFF    // Low-Power Timer1 Oscillator Enable bit (Timer1 configured for higher power operation)
 #pragma config MCLRE = ON       // MCLR Pin Enable bit (MCLR pin enabled; RE3 input pin disabled)
 
@@ -71,8 +71,8 @@
 #define row7 LATCbits.LATC5
 #define row8 LATCbits.LATC6
 
-#define btn_left PORTAbits.RA3
-#define btn_right PORTAbits.RA4
+#define btn_left PORTAbits.RA4
+#define btn_right PORTCbits.RC0
 
 int generate_enemy(){
 //    srand(time(NULL) );
@@ -147,10 +147,10 @@ void shift2(void){
 }
 
 void main(void) {
-    TRISA3 = 1;
     TRISA4 = 1;
     TRISB = 0x00;
     TRISC = 0x00;
+    TRISC0 = 1;
     TRISD = 0x00;
     LATB = 0x00;
     LATC = 0x00;
@@ -158,77 +158,91 @@ void main(void) {
     int j = 0;
     
     while(1){
-//        LATD = 0;
-//        row1 = 1;
-//        row2 = 0;
-//        row3 = 0;
-//        row4 = 0;
-//        row5 = 0;
-//        row6 = 0;
-//        row7 = 0;
-//        row8 = 0;
-//        
-//        LATD = (init_board[0] & led_pos[0]);
-//         __delay_ms(100);
-//        row1 = 0;
-//        
-//        row2 = 1;
-//        LATD = (init_board[1] & led_pos[1]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row2 = 0;
-//         
-//        row3 = 1;
-//        LATD = (init_board[2] & led_pos[2]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row3 = 0;
-//
-//        row4 = 1;
-//        LATD = (init_board[3] & led_pos[3]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row4 = 0;
-//
-//        row5 = 1;
-//        LATD = (init_board[4] & led_pos[4]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row5 = 0;
-//        
-//        row6 = 1;
-//        LATD = (init_board[5] & led_pos[5]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row6 = 0;
-//
-//        row7 = 1;
-//        LATD = (init_board[6] & led_pos[6] & lr_board[0]);
-//        __delay_ms(100);
-//        LATD = 0;
-//        row7 = 0;
+        LATD = 0;
+        row1 = 1;
+        row2 = 0;
+        row3 = 0;
+        row4 = 0;
+        row5 = 0;
+        row6 = 0;
+        row7 = 0;
+        row8 = 0;
+        
+        LATD = (init_board[0] & led_pos[0] & lr_board[1]);
+         __delay_ms(100);
+        row1 = 0;
+        
+        row2 = 1;
+        LATD = (init_board[1] & led_pos[1] & lr_board[0]);
+        __delay_ms(100);
+        LATD = 0;
+        row2 = 0;
+         
+        row3 = 1;
+        LATD = (init_board[2] & led_pos[2]);
+        __delay_ms(100);
+        LATD = 0;
+        row3 = 0;
+
+        row4 = 1;
+        LATD = (init_board[3] & led_pos[3]);
+        __delay_ms(100);
+        LATD = 0;
+        row4 = 0;
+
+        row5 = 1;
+        LATD = (init_board[4] & led_pos[4]);
+        __delay_ms(100);
+        LATD = 0;
+        row5 = 0;
+        
+        row6 = 1;
+        LATD = (init_board[5] & led_pos[5]);
+        __delay_ms(100);
+        LATD = 0;
+        row6 = 0;
+
+        row7 = 1;
+        LATD = (init_board[6] & led_pos[6]);
+        __delay_ms(100);
+        LATD = 0;
+        row7 = 0;
 //
         row8 = 1;
-        LATD = (init_board[7] & led_pos[7] & lr_board[1]) ;
-//        __delay_ms(100);
-//        LATD = 0;
-//        row8 = 0;
+        LATD = (init_board[7] & led_pos[7]);
+        __delay_ms(100);
+        LATD = 0;
+        row8 = 0;
 //        
 //       __delay_ms(100);
 //       
-       if(RA4 == 0){
+       if(btn_left == 0){
+           if(lr_board[1] != 0b00011111){
                lr_board[0] = ~lr_board[0];
                lr_board[0] = lr_board[0] << 1;
                lr_board[0] = ~lr_board[0];
                lr_board[1] = ~lr_board[1];
                lr_board[1] = lr_board[1] << 1;
                lr_board[1] = ~lr_board[1];
-               __delay_ms(100000);
+               __delay_ms(25000);
+           }
+           }
+//        
+        if(btn_right == 0){
+            if(lr_board[1] != 0b11111000){
+               lr_board[0] = ~lr_board[0];
+               lr_board[0] = lr_board[0] >> 1;
+               lr_board[0] = ~lr_board[0];
+               lr_board[1] = ~lr_board[1];
+               lr_board[1] = lr_board[1] >> 1;
+               lr_board[1] = ~lr_board[1];
+               __delay_ms(25000);   
+            }
            }
        j++;
        if (j > 200){
-          // __delay_ms(1000);
-//           shift();
+           __delay_ms(1000);
+           shift();
 
 //           else if(!btn_left & btn_right){
 //               lr_board[0] = lr_board[0]>>1;
