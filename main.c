@@ -73,6 +73,7 @@
 
 #define btn_left PORTAbits.RA4
 #define btn_right PORTCbits.RC0
+#define btn_attack PORTCbits.RC3
 
 int generate_enemy(){
 //    srand(time(NULL) );
@@ -151,6 +152,7 @@ void main(void) {
     TRISB = 0x00;
     TRISC = 0x00;
     TRISC0 = 1;
+    TRISC3 = 1;
     TRISD = 0x00;
     LATB = 0x00;
     LATC = 0x00;
@@ -239,6 +241,11 @@ void main(void) {
                __delay_ms(25000);   
             }
            }
+        
+        if(btn_attack == 0){
+            led_pos[2] = lr_board[0] & led_pos[2];
+            __delay_ms(25000);
+        }
        j++;
        if (j > 200){
            __delay_ms(1000);
@@ -249,7 +256,7 @@ void main(void) {
 //               lr_board[1] = lr_board[1]>>1;    
 //               //__delay_ms(1000);
 //           }
-           //shift2();
+           shift2();
            j = 0;
            
        }
