@@ -121,6 +121,17 @@ char game_over_board[8] = {
     0b01111110
 };
 
+char big_bang_board[8] = {
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111
+};
+    
 void shift_down(void){
     init_board[0] = init_board[1];
     init_board[1] = init_board[2];
@@ -149,10 +160,33 @@ void shift_up(void){
     led_pos[0] = 0b11111111;
 }
 
+void __interrupt(high_priority) Hi_ISR(void)
+{
+    int i;
+    for(i=0; i<8; i++){
+        init_board[i] = big_bang_board[i];
+        led_pos[i] = big_bang_board[i];
+    }
+    INTCONbits.INT0IF = 0;
+    return ;
+}
+
+//void __interrupt(low_priority)  Lo_ISR(void)
+//{
+//    int i;
+//    for(i=0; i<8; i++){
+//        init_board[i] = big_bang_board[i];
+//        led_pos[i] = big_bang_board[i];
+//    }
+//    INTCONbits.INT0IF = 0;
+//    return;
+//}
+
 void main(void) {
   TRISA = 0x00;
   TRISA4 = 1;
   TRISB = 0x00;
+  TRISB0 = 1;
   TRISC = 0x00;
   TRISC0 = 1;
   TRISC3 = 1;
@@ -161,6 +195,9 @@ void main(void) {
   LATB = 0x00;
   LATC = 0x00;
   LATD = 0xff;
+  RCONbits.IPEN = 1;
+  INTCONbits.GIE = 1;
+  INTCONbits.INT0IE = 1;
   int m, j = 0;
   int life = 3;
   int game_over = 0;
