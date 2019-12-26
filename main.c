@@ -99,9 +99,18 @@ char lr_board[2] = {
     0b11110001    
 };
 
-int plane;
+char led_pos[8] = {
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111
+};
 
-void shift(void){
+void shift_down(void){
     init_board[0] = init_board[1];
     init_board[1] = init_board[2];
     init_board[2] = init_board[3];
@@ -118,18 +127,7 @@ void shift(void){
     }
 }
 
-char led_pos[8] = {
-    0b11111111,
-    0b11111111,
-    0b11111111,
-    0b11111111,
-    0b11111111,
-    0b11111111,
-    0b11111111,
-    0b11111111
-};
-
-void shift2(void){
+void shift_up(void){
     led_pos[7] = led_pos[6];
     led_pos[6] = led_pos[5];
     led_pos[5] = led_pos[4];
@@ -137,14 +135,7 @@ void shift2(void){
     led_pos[3] = led_pos[2];
     led_pos[2] = led_pos[1];
     led_pos[1] = led_pos[0];
-    if (rand() % (2)){
-        int x = generate_enemy();
-        led_pos[0] = 0b11111111 - (int) pow((double) 2,x);
-    }
-    else{
-        led_pos[0] = 0b11111111;
-    }
-    
+    led_pos[0] = 0b11111111;
 }
 
 void main(void) {
@@ -158,6 +149,10 @@ void main(void) {
     LATC = 0x00;
     LATD = 0xff;
     int j = 0;
+    int l_flag, r_flag, a_flag;
+    l_flag = 0;
+    r_flag = 0;
+    a_flag = 0;
     
     while(1){
         LATD = 0;
@@ -171,7 +166,7 @@ void main(void) {
         row8 = 0;
         
         LATD = (init_board[0] & led_pos[0] & lr_board[1]);
-         __delay_ms(100);
+        __delay_ms(100);
         row1 = 0;
         
         row2 = 1;
@@ -209,16 +204,27 @@ void main(void) {
         __delay_ms(100);
         LATD = 0;
         row7 = 0;
-//
+
         row8 = 1;
         LATD = (init_board[7] & led_pos[7]);
         __delay_ms(100);
         LATD = 0;
         row8 = 0;
-//        
-//       __delay_ms(100);
-//       
-       if(btn_left == 0){
+       
+        if(btn_left == 0){
+               l_flag = 1;
+           }
+
+        if(btn_right == 0){
+               r_flag = 1;
+            }
+        
+        if(btn_attack == 0){
+            a_flag = 1;
+        }     
+        
+       if (j % 50 == 0){
+           if(l_flag == 1){
            if(lr_board[1] != 0b00011111){
                lr_board[0] = ~lr_board[0];
                lr_board[0] = lr_board[0] << 1;
@@ -226,11 +232,10 @@ void main(void) {
                lr_board[1] = ~lr_board[1];
                lr_board[1] = lr_board[1] << 1;
                lr_board[1] = ~lr_board[1];
-               __delay_ms(25000);
            }
+           l_flag = 0;
            }
-//        
-        if(btn_right == 0){
+           if(r_flag == 1){
             if(lr_board[1] != 0b11111000){
                lr_board[0] = ~lr_board[0];
                lr_board[0] = lr_board[0] >> 1;
@@ -238,44 +243,33 @@ void main(void) {
                lr_board[1] = ~lr_board[1];
                lr_board[1] = lr_board[1] >> 1;
                lr_board[1] = ~lr_board[1];
-               __delay_ms(25000);   
-            }
            }
-        
-        if(btn_attack == 0){
-            led_pos[2] = lr_board[0] & led_pos[2];
-            __delay_ms(25000);
-        }
-       j++;
-       if (j > 200){
-           __delay_ms(1000);
-           shift();
-
-//           else if(!btn_left & btn_right){
-//               lr_board[0] = lr_board[0]>>1;
-//               lr_board[1] = lr_board[1]>>1;    
-//               //__delay_ms(1000);
-//           }
-           shift2();
-           j = 0;
-           
+            r_flag = 0;
+           }
+           if(a_flag == 1){
+               led_pos[1] = lr_board[0] & led_pos[1];
+               a_flag = 0;
+           }
        }
-       
-//    row4 = 1;
-//    LATD = led_pos[3];
-//    __delay_ms(10);
-//    row5 = 1;
-//    LATD = led_pos[4];
-//    __delay_ms(10);
-//    row6 = 1;
-//    LATD = led_pos[5];
-//    __delay_ms(10);
-//    row7 = 1;
-//    LATD = led_pos[6];
-//    __delay_ms(10);
-//    row8 = 1;
-//    LATD = led_pos[7];
-//    __delay_ms(10);
+         
+       j++;
+       if (j > 250){
+           int k;
+           char tmp;
+           for(k=0; k<8; k++){
+               tmp = init_board[k] & (~led_pos[k]);
+               led_pos[k] = ~init_board[k] & led_pos[k];
+               init_board[k] = tmp;
+           }
+           for(k=0; k<7; k++){
+               tmp = init_board[k+1] & (~led_pos[k]);
+               led_pos[k] = ~init_board[k+1] & led_pos[k];
+               init_board[k+1] = tmp;
+           }
+           shift_down();
+           shift_up();
+           j = 0;
+       }
     }
     return;
 }
