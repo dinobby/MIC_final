@@ -305,8 +305,10 @@ void main(void) {
         if(b_flag){
           int i;
           while (CCPR1L > 0){
+              RC1 = 0;
           __delay_ms(1000);
           CCPR1L --;
+          RC1 = 1;
           }
           b_flag = 0;
           bb_enable = 0;
@@ -348,7 +350,14 @@ void main(void) {
     if (j%50==0 && CCPR1L < 71){
         CCPR1L = CCPR1L + 3;
     }
-
+    
+//    if (b_flag && j%10 < 2){
+//        RC1 = 1;
+//    }
+//    else{
+//        RC1 = 0;
+//    }
+    
     if (j > 150) {
       m++;
       int k;
