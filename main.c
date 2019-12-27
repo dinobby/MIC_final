@@ -75,8 +75,11 @@
 #define btn_right PORTCbits.RC0
 #define btn_attack PORTCbits.RC3
 
+int b_flag = 0;
+int bb_enable = 1;
+
 int generate_enemy(){
-//    srand(time(NULL) );
+    //srand(time(NULL));
     int min = 1;
     int max = 6;
     int x = rand() % (max - min + 1) + min;
@@ -140,7 +143,7 @@ void shift_down(void){
     init_board[4] = init_board[5];
     init_board[5] = init_board[6];
     init_board[6] = init_board[7];
-    if (rand() % (2)){
+    if (rand() % (3)){
         int x = generate_enemy();
         init_board[7] = 0b11111111 - (int) pow((double) 2,x);
     }
@@ -162,11 +165,19 @@ void shift_up(void){
 
 void __interrupt(high_priority) Hi_ISR(void)
 {
-    int i;
-    for(i=0; i<8; i++){
+    if(bb_enable == 0){
+        INTCONbits.INT0IF = 0;
+        return;
+    }
+
+        b_flag = 1;
+        int i;
+        for(i=0; i<8; i++){
         init_board[i] = big_bang_board[i];
         led_pos[i] = big_bang_board[i];
-    }
+        }
+        //bb_enable = 0;
+    
     INTCONbits.INT0IF = 0;
     return ;
 }
@@ -198,6 +209,13 @@ void main(void) {
   RCONbits.IPEN = 1;
   INTCONbits.GIE = 1;
   INTCONbits.INT0IE = 1;
+  T2CON = 0b01111111;    //Postscale = Prescale = 1:16
+  PR2 = 0x9b;            //500,000/4/16 = 7812.5 = 1s => 156.25 = 20ms
+                         //(155+1)*4*(1/500000)*16 = 0.02
+  CCPR1L = 75;           //75*(1/500000)*16 = 0.0024 = +90 degree
+  CCP1CON = 0b00001100;  //CCP1CON <5:4> = 1
+  OSCCON = 0b10110000;   // set to 500 kHz
+  
   int m, j = 0;
   int life = 3;
   int game_over = 0;
@@ -277,8 +295,22 @@ void main(void) {
     if (btn_attack == 0) {
       a_flag = 1;
     }
-
+    
+//    if (j>200 && CCPR1L < 71){
+//            CCPR1L = CCPR1L + 5;
+//            //__delay_ms(10000);
+//    }
+    
     if (j % 50 == 0) {
+        if(b_flag){
+          int i;
+          while (CCPR1L > 0){
+          __delay_ms(1000);
+          CCPR1L --;
+          }
+          b_flag = 0;
+          bb_enable = 0;
+        }
       if (l_flag == 1) {
         if (lr_board[1] != 0b00011111) {
           lr_board[0] = ~lr_board[0];
@@ -308,8 +340,16 @@ void main(void) {
     }
 
     j++;
+    
+    if (CCPR1L >= 20){
+        bb_enable = 1;
+    }
+    
+    if (j%50==0 && CCPR1L < 71){
+        CCPR1L = CCPR1L + 3;
+    }
 
-    if (j > 50) {
+    if (j > 150) {
       m++;
       int k;
       char tmp;
@@ -318,6 +358,7 @@ void main(void) {
         m = 0;
         break;
       }
+
       for (k = 0; k < 8; k++) {
         tmp = init_board[k] | (~led_pos[k]);
         led_pos[k] = (~init_board[k]) | led_pos[k];
